@@ -1,0 +1,193 @@
+// schema.prisma - מבנה הדאטהבייס למערכת ShiftBalance
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ===== ENUMS =====
+enum UserRole {
+  ADMIN        // מנהל
+  SHIFT_MANAGER // אחראי משמרת
+  EMPLOYEE     // עובד רגיל
+}
+
+enum EmployeeLevel {
+  TRAINEE      // מתלמד
+  RUNNER       // ראנר
+  INTERMEDIATE // בינוני
+  EXPERT       // חזק
+}
+
+enum EmployeePosition {
+  SERVER         // מלצר
+  BARTENDER      // ברמן
+  SHIFT_MANAGER  // אחראי משמרת
+}
+
+enum ShiftType {
+  LUNCH   // 11:00-17:00
+  DINNER  // 17:00-23:00
+}
+
+enum ShiftRequestStatus {
+  PENDING    // ממתין לאישור
+  APPROVED   // אושר
+  REJECTED   // נדחה
+  CANCELLED  // בוטל
+}
+
+// ===== MODELS =====
+
+model User {
+  id                String            @id @default(cuid())
+  phone             String            @unique
+  fullName          String
+  password          String
+  role              UserRole          @default(EMPLOYEE)
+  level             EmployeeLevel     @default(TRAINEE)
+  position          EmployeePosition  @default(SERVER)
+  isActive          Boolean           @default(true)
+  registrationToken String?           @unique // טוקן חד פעמי להרשמה
+  tokenUsed         Boolean           @default(false)
+  pushToken         String?           // עבור Push Notifications
+  
+  // Relations
+  availability      Availability[]
+  assignedShifts    Shift[]           @relation("EmployeeShifts")
+  managedShifts     Shift[]           @relation("ShiftManager")
+  swapRequests      SwapRequest[]     @relation("RequestedBy")
+  swapOffers        SwapRequest[]     @relation("AcceptedBy")
+  notifications     Notification[]
+  
+  createdAt         DateTime          @default(now())
+  updatedAt         DateTime          @updatedAt
+}
+
+model WeeklySchedule {
+  id                String            @id @default(cuid())
+  weekStartDate     DateTime          // תחילת השבוע (יום ראשון)
+  weekEndDate       DateTime          // סוף השבוע (יום שבת)
+  isPublished       Boolean           @default(false)
+  publishedAt       DateTime?
+  publishedBy       String?           // ID של המנהל שפרסם
+  
+  // הגדרות כמות עובדים למשמרת
+  requiredStaff     Json              // {"lunch": 8, "dinner": 12}
+  
+  // Relations
+  shifts            Shift[]
+  availability      Availability[]
+  
+  createdAt         DateTime          @default(now())
+  updatedAt         DateTime          @updatedAt
+  
+  @@unique([weekStartDate, weekEndDate])
+}
+
+model Shift {
+  id                String            @id @default(cuid())
+  date              DateTime          // תאריך המשמרת
+  type              ShiftType         // צהריים/ערב
+  
+  // Relations
+  schedule          WeeklySchedule    @relation(fields: [scheduleId], references: [id], onDelete: Cascade)
+  scheduleId        String
+  
+  employees         User[]            @relation("EmployeeShifts")
+  shiftManager      User?             @relation("ShiftManager", fields: [shiftManagerId], references: [id])
+  shiftManagerId    String?
+  
+  swapRequests      SwapRequest[]
+  
+  // מטריקות לאיזון המשמרת
+  qualityScore      Int               @default(0) // ציון איכות המשמרת (0-100)
+  isBalanced        Boolean           @default(false)
+  
+  createdAt         DateTime          @default(now())
+  updatedAt         DateTime          @updatedAt
+  
+  @@unique([date, type])
+  @@index([scheduleId])
+}
+
+model Availability {
+  id                String            @id @default(cuid())
+  
+  // Relations
+  user              User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId            String
+  
+  schedule          WeeklySchedule    @relation(fields: [scheduleId], references: [id], onDelete: Cascade)
+  scheduleId        String
+  
+  // זמינות - JSON array של משמרות זמינות
+  // [{"day": "sunday", "lunch": true, "dinner": false}, ...]
+  slots             Json
+  
+  submittedAt       DateTime          @default(now())
+  
+  @@unique([userId, scheduleId])
+  @@index([scheduleId])
+}
+
+model SwapRequest {
+  id                String            @id @default(cuid())
+  
+  // Relations
+  shift             Shift             @relation(fields: [shiftId], references: [id], onDelete: Cascade)
+  shiftId           String
+  
+  requestedBy       User              @relation("RequestedBy", fields: [requestedById], references: [id])
+  requestedById     String
+  
+  acceptedBy        User?             @relation("AcceptedBy", fields: [acceptedById], references: [id])
+  acceptedById      String?
+  
+  status            ShiftRequestStatus @default(PENDING)
+  reason            String?
+  
+  createdAt         DateTime          @default(now())
+  resolvedAt        DateTime?
+  
+  @@index([shiftId])
+  @@index([requestedById])
+}
+
+model Notification {
+  id                String            @id @default(cuid())
+  
+  // Relations
+  user              User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId            String
+  
+  type              String            // SHIFT_PUBLISHED, SWAP_REQUEST, REMINDER, etc.
+  title             String
+  message           String
+  data              Json?             // נתונים נוספים לפי הצורך
+  
+  isRead            Boolean           @default(false)
+  readAt            DateTime?
+  
+  createdAt         DateTime          @default(now())
+  
+  @@index([userId, isRead])
+}
+
+// ===== SETTINGS =====
+model SystemSettings {
+  id                String            @id @default(cuid())
+  key               String            @unique
+  value             Json
+  
+  updatedAt         DateTime          @updatedAt
+}
+
+// דוגמאות לsettings:
+// - availabilityDeadline: {"day": "thursday", "time": "16:00"}
+// - shiftTimes: {"lunch": {"start": "11:00", "end": "17:00"}, "dinner": {"start": "17:00", "end": "23:00"}}
+// - fairShareRules: {"maxConsecutiveShifts": 6, "minDayOff": 1}

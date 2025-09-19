@@ -1,0 +1,549 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ShiftBalance - דשבורד עובד</title>
+    <link href="https://fonts.googleapis.com/css2?family=Rubik:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Rubik', -apple-system, sans-serif;
+            background: #F9FAFB;
+            min-height: 100vh;
+            padding-bottom: 70px; /* Space for bottom nav */
+        }
+
+        /* Header */
+        .header {
+            background: linear-gradient(135deg, #2563EB, #7C3AED);
+            color: white;
+            padding: 20px;
+            padding-top: 40px;
+            border-radius: 0 0 30px 30px;
+            box-shadow: 0 10px 30px rgba(37, 99, 235, 0.2);
+        }
+
+        .header-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .greeting {
+            font-size: 24px;
+            font-weight: 600;
+        }
+
+        .notification-bell {
+            position: relative;
+            background: rgba(255, 255, 255, 0.2);
+            width: 40px;
+            height: 40px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+        }
+
+        .notification-dot {
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            width: 8px;
+            height: 8px;
+            background: #EF4444;
+            border-radius: 50%;
+        }
+
+        /* Next Shift Card */
+        .next-shift-card {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 16px;
+            padding: 20px;
+            margin-top: 20px;
+        }
+
+        .shift-label {
+            font-size: 12px;
+            color: #2563EB;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 8px;
+        }
+
+        .shift-date {
+            font-size: 20px;
+            font-weight: 700;
+            color: #1F2937;
+            margin-bottom: 12px;
+        }
+
+        .shift-details {
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+
+        .shift-detail {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            color: #4B5563;
+            font-size: 14px;
+        }
+
+        .shift-detail-icon {
+            font-size: 16px;
+        }
+
+        /* Main Content */
+        .main-content {
+            padding: 20px;
+        }
+
+        /* Quick Stats */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+            margin-bottom: 25px;
+        }
+
+        .stat-card {
+            background: white;
+            border-radius: 16px;
+            padding: 16px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+        }
+
+        .stat-value {
+            font-size: 28px;
+            font-weight: 700;
+            color: #1F2937;
+            margin-bottom: 4px;
+        }
+
+        .stat-label {
+            font-size: 13px;
+            color: #6B7280;
+        }
+
+        .stat-trend {
+            display: inline-block;
+            font-size: 12px;
+            color: #10B981;
+            background: #DCFCE7;
+            padding: 2px 6px;
+            border-radius: 4px;
+            margin-top: 4px;
+        }
+
+        /* Action Cards */
+        .action-grid {
+            display: grid;
+            gap: 15px;
+        }
+
+        .action-card {
+            background: white;
+            border-radius: 16px;
+            padding: 20px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .action-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+
+        .action-icon {
+            width: 50px;
+            height: 50px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+        }
+
+        .action-icon.primary {
+            background: #EFF6FF;
+        }
+
+        .action-icon.success {
+            background: #DCFCE7;
+        }
+
+        .action-icon.warning {
+            background: #FEF3C7;
+        }
+
+        .action-content {
+            flex: 1;
+        }
+
+        .action-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: #1F2937;
+            margin-bottom: 4px;
+        }
+
+        .action-description {
+            font-size: 13px;
+            color: #6B7280;
+        }
+
+        .action-arrow {
+            color: #9CA3AF;
+            font-size: 20px;
+        }
+
+        /* Alert Card */
+        .alert-card {
+            background: #FEF3C7;
+            border: 1px solid #FCD34D;
+            border-radius: 12px;
+            padding: 16px;
+            display: flex;
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+
+        .alert-icon {
+            font-size: 20px;
+        }
+
+        .alert-content {
+            flex: 1;
+        }
+
+        .alert-title {
+            font-weight: 600;
+            color: #92400E;
+            margin-bottom: 4px;
+            font-size: 14px;
+        }
+
+        .alert-text {
+            color: #B45309;
+            font-size: 13px;
+        }
+
+        /* Bottom Navigation */
+        .bottom-nav {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: white;
+            box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.05);
+            display: flex;
+            justify-content: space-around;
+            padding: 12px 0 16px;
+            z-index: 100;
+        }
+
+        .nav-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+            color: #9CA3AF;
+            cursor: pointer;
+            padding: 8px;
+            transition: all 0.3s;
+        }
+
+        .nav-item.active {
+            color: #2563EB;
+        }
+
+        .nav-icon {
+            font-size: 20px;
+        }
+
+        .nav-label {
+            font-size: 11px;
+            font-weight: 500;
+        }
+
+        /* Upcoming Shifts */
+        .upcoming-shifts {
+            margin-top: 25px;
+        }
+
+        .section-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #1F2937;
+            margin-bottom: 15px;
+        }
+
+        .shifts-list {
+            display: grid;
+            gap: 12px;
+        }
+
+        .shift-item {
+            background: white;
+            border-radius: 12px;
+            padding: 16px;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+        }
+
+        .shift-day {
+            text-align: center;
+            min-width: 50px;
+        }
+
+        .shift-day-name {
+            font-size: 12px;
+            color: #6B7280;
+            margin-bottom: 4px;
+        }
+
+        .shift-day-number {
+            font-size: 20px;
+            font-weight: 700;
+            color: #1F2937;
+        }
+
+        .shift-info {
+            flex: 1;
+        }
+
+        .shift-time {
+            font-weight: 600;
+            color: #1F2937;
+            margin-bottom: 4px;
+        }
+
+        .shift-type {
+            font-size: 13px;
+            color: #6B7280;
+        }
+
+        .shift-badge {
+            padding: 4px 10px;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .badge-lunch {
+            background: #FEF3C7;
+            color: #92400E;
+        }
+
+        .badge-dinner {
+            background: #EDE9FE;
+            color: #5B21B6;
+        }
+
+        @media (max-width: 480px) {
+            .header {
+                padding: 15px;
+                padding-top: 30px;
+            }
+
+            .greeting {
+                font-size: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <div class="header">
+        <div class="header-top">
+            <div class="greeting">שלום, יוסי 👋</div>
+            <div class="notification-bell">
+                <span>🔔</span>
+                <div class="notification-dot"></div>
+            </div>
+        </div>
+
+        <!-- Next Shift Card -->
+        <div class="next-shift-card">
+            <div class="shift-label">המשמרת הבאה שלך</div>
+            <div class="shift-date">יום שלישי, 23 בספטמבר</div>
+            <div class="shift-details">
+                <div class="shift-detail">
+                    <span class="shift-detail-icon">⏰</span>
+                    <span>17:00 - 23:00</span>
+                </div>
+                <div class="shift-detail">
+                    <span class="shift-detail-icon">👥</span>
+                    <span>6 עובדים</span>
+                </div>
+                <div class="shift-detail">
+                    <span class="shift-detail-icon">👨‍💼</span>
+                    <span>דני - אחראי משמרת</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="main-content">
+        <!-- Alert -->
+        <div class="alert-card">
+            <div class="alert-icon">⚠️</div>
+            <div class="alert-content">
+                <div class="alert-title">תזכורת</div>
+                <div class="alert-text">יש להגיש זמינות לשבוע הבא עד חמישי 16:00</div>
+            </div>
+        </div>
+
+        <!-- Quick Stats -->
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-value">4</div>
+                <div class="stat-label">משמרות השבוע</div>
+                <div class="stat-trend">+1 מהשבוע שעבר</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value">2/2</div>
+                <div class="stat-label">איזון בוקר/ערב</div>
+            </div>
+        </div>
+
+        <!-- Action Cards -->
+        <div class="action-grid">
+            <div class="action-card">
+                <div class="action-icon primary">
+                    <span>📝</span>
+                </div>
+                <div class="action-content">
+                    <div class="action-title">הגש זמינות</div>
+                    <div class="action-description">לשבוע 28/9 - 4/10</div>
+                </div>
+                <div class="action-arrow">←</div>
+            </div>
+
+            <div class="action-card">
+                <div class="action-icon success">
+                    <span>🔄</span>
+                </div>
+                <div class="action-content">
+                    <div class="action-title">בקש החלפה</div>
+                    <div class="action-description">0 בקשות פתוחות</div>
+                </div>
+                <div class="action-arrow">←</div>
+            </div>
+
+            <div class="action-card">
+                <div class="action-icon warning">
+                    <span>📅</span>
+                </div>
+                <div class="action-content">
+                    <div class="action-title">הסידור המלא</div>
+                    <div class="action-description">צפה בכל המשמרות השבוע</div>
+                </div>
+                <div class="action-arrow">←</div>
+            </div>
+        </div>
+
+        <!-- Upcoming Shifts -->
+        <div class="upcoming-shifts">
+            <h2 class="section-title">המשמרות הקרובות</h2>
+            <div class="shifts-list">
+                <div class="shift-item">
+                    <div class="shift-day">
+                        <div class="shift-day-name">שלישי</div>
+                        <div class="shift-day-number">23</div>
+                    </div>
+                    <div class="shift-info">
+                        <div class="shift-time">17:00 - 23:00</div>
+                        <div class="shift-type">משמרת ערב</div>
+                    </div>
+                    <div class="shift-badge badge-dinner">ערב</div>
+                </div>
+
+                <div class="shift-item">
+                    <div class="shift-day">
+                        <div class="shift-day-name">חמישי</div>
+                        <div class="shift-day-number">25</div>
+                    </div>
+                    <div class="shift-info">
+                        <div class="shift-time">11:00 - 17:00</div>
+                        <div class="shift-type">משמרת צהריים</div>
+                    </div>
+                    <div class="shift-badge badge-lunch">צהריים</div>
+                </div>
+
+                <div class="shift-item">
+                    <div class="shift-day">
+                        <div class="shift-day-name">שישי</div>
+                        <div class="shift-day-number">26</div>
+                    </div>
+                    <div class="shift-info">
+                        <div class="shift-time">11:00 - 17:00</div>
+                        <div class="shift-type">משמרת צהריים</div>
+                    </div>
+                    <div class="shift-badge badge-lunch">צהריים</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bottom Navigation -->
+    <div class="bottom-nav">
+        <div class="nav-item active">
+            <span class="nav-icon">🏠</span>
+            <span class="nav-label">בית</span>
+        </div>
+        <div class="nav-item">
+            <span class="nav-icon">📅</span>
+            <span class="nav-label">משמרות</span>
+        </div>
+        <div class="nav-item">
+            <span class="nav-icon">📝</span>
+            <span class="nav-label">זמינות</span>
+        </div>
+        <div class="nav-item">
+            <span class="nav-icon">🔄</span>
+            <span class="nav-label">החלפות</span>
+        </div>
+        <div class="nav-item">
+            <span class="nav-icon">👤</span>
+            <span class="nav-label">פרופיל</span>
+        </div>
+    </div>
+
+    <script>
+        // Simulate interaction
+        document.querySelectorAll('.action-card').forEach(card => {
+            card.addEventListener('click', function() {
+                const title = this.querySelector('.action-title').textContent;
+                alert(`נבחר: ${title}`);
+            });
+        });
+
+        document.querySelectorAll('.nav-item').forEach(item => {
+            item.addEventListener('click', function() {
+                document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
+                this.classList.add('active');
+            });
+        });
+    </script>
+</body>
+</html>
