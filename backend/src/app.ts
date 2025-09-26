@@ -18,9 +18,17 @@ export const createApp = (): Application => {
   app.use(helmet());
 
   // CORS configuration
+  const corsOrigins = config.isDevelopment
+    ? ['http://localhost:3000', 'http://localhost:3001']
+    : [
+        process.env.CLIENT_URL || 'https://shiftbalance.vercel.app',
+        'https://shiftbalance.vercel.app',
+        /\.vercel\.app$/,  // Allow any Vercel preview deployments
+      ];
+
   app.use(
     cors({
-      origin: ['http://localhost:3000', 'http://localhost:3001'],
+      origin: corsOrigins,
       credentials: true,
       methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
       allowedHeaders: ['Content-Type', 'Authorization'],

@@ -1,0 +1,18 @@
+[build]
+builder = "nixpacks"
+buildCommand = "npm ci && npm run prisma:generate && npm run build"
+
+[deploy]
+startCommand = "npm run db:migrate:deploy && npm run start"
+healthcheckPath = "/api/health"
+healthcheckTimeout = 100
+restartPolicyType = "on-failure"
+restartPolicyMaxRetries = 3
+
+[[services]]
+name = "backend"
+port = 5001
+
+[services.backend]
+internalPort = 5001
+protocol = "http"

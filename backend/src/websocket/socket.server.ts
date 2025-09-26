@@ -13,9 +13,17 @@ export class SocketServer {
   private userSockets: Map<string, Set<string>> = new Map(); // userId -> Set of socketIds
 
   constructor(httpServer: HttpServer) {
+    const corsOrigins = process.env.NODE_ENV === 'production'
+      ? [
+          process.env.CLIENT_URL || 'https://shiftbalance.vercel.app',
+          'https://shiftbalance.vercel.app',
+          /\.vercel\.app$/,
+        ]
+      : ['http://localhost:3000', 'http://localhost:3001'];
+
     this.io = new Server(httpServer, {
       cors: {
-        origin: ['http://localhost:3000', 'http://localhost:3001'],
+        origin: corsOrigins,
         credentials: true,
       },
       transports: ['websocket', 'polling'],

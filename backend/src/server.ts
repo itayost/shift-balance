@@ -29,10 +29,11 @@ const startServer = async () => {
     logger.info('✅ WebSocket server initialized');
 
     // Start listening
-    httpServer.listen(config.port, () => {
-      logger.info(`🚀 Server is running on port ${config.port}`);
+    const host = config.nodeEnv === 'production' ? '0.0.0.0' : 'localhost';
+    httpServer.listen(config.port, host, () => {
+      logger.info(`🚀 Server is running on ${host}:${config.port}`);
       logger.info(`🌍 Environment: ${config.nodeEnv}`);
-      logger.info(`📍 Health check: http://localhost:${config.port}/api/health`);
+      logger.info(`📍 Health check: http://${host}:${config.port}/api/health`);
       logger.info(`🔌 WebSocket server ready`);
     });
   } catch (error) {

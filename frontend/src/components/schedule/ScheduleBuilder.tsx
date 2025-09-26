@@ -3,7 +3,8 @@ import { format, addDays } from 'date-fns';
 import { he } from 'date-fns/locale';
 import { ShiftType, User, EmployeePosition } from 'shiftbalance-shared';
 import { useScheduleStore } from '../../store/schedule.store';
-import { Coffee, Moon, Users, X, UserCheck, Wine, Crown } from 'lucide-react';
+import { Coffee, Moon, Users, 
+  X, UserCheck, Wine, Crown } from 'lucide-react';
 
 interface ScheduleBuilderProps {
   weekDate: Date;
