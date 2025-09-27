@@ -1,7 +1,7 @@
 {
   "version": 2,
-  "framework": null,
-  "buildCommand": "cd shared && npm run build; cd ../frontend && npm run build:prod",
+  "framework": "vite",
+  "buildCommand": "cd frontend && npm run build",
   "outputDirectory": "frontend/dist",
   "installCommand": "npm install",
   "rewrites": [
